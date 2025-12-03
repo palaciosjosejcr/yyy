@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TUVN - Monitoreo Térmico</title>
+    <script>
+// --- Variables globales ---
+let modo = "auto";
+let ventilador = false;
+let calefactor = false;
+
+// Obtención de elementos
+const modoSwitch = document.getElementById("modoSwitch");
+const estadoVent = document.getElementById("estadoVent");
+const estadoCal = document.getElementById("estadoCal");
+
+// Actualiza visualmente los estados
+function actualizarEstados() {
+    estadoVent.textContent = ventilador ? "ENCENDIDO" : "APAGADO";
+    estadoVent.className = ventilador ? "text-green-500 font-bold" : "text-red-500 font-bold";
+
+    estadoCal.textContent = calefactor ? "ENCENDIDO" : "APAGADO";
+    estadoCal.className = calefactor ? "text-green-500 font-bold" : "text-red-500 font-bold";
+}
+
+// Lógica automática basada en temperatura promedio
+function controlAutomatico(tempPromedio) {
+    if (tempPromedio > 25) {
+        ventilador = true;
+        calefactor = false;
+    } else if (tempPromedio < 20) {
+        calefactor = true;
+        ventilador = false;
+    }
+    actualizarEstados();
+}
+
+// Cambio de modo
+modoSwitch.addEventListener("change", () => {
+    modo = modoSwitch.checked ? "manual" : "auto";
+});
+
+// Función principal que actualiza todo
+function actualizarSistema(tempPromedio) {
+    if (modo === "auto") {
+        controlAutomatico(tempPromedio);
+    }
+    // En modo manual no se modifica automáticamente
+    actualizarEstados();
+}
+
+// Llamar esta función cuando actualices los sensores de temperatura
+// actualizarSistema(promedioGeneral);
+</script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Roboto', sans-serif; }
+        .sensor-card { transition: all 0.3s ease; }
+        .sensor-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .thermo-bar { height: 14px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+        .thermo-fill { height: 100%; background: #ef4444; transition: width 0.4s ease; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+<header class="bg-blue-900 text-white shadow-lg border-b-4 border-red-600">
+    <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div class="bg-white p-2 rounded-full">
+                <i data-lucide="graduation-cap" class="w-8 h-8 text-blue-900"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">TUVN</h1>
+                <p class="text-xs text-blue-200 font-semibold tracking-widest">AUTOMATIZACIÓN E INSTRUMENTACIÓN</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 bg-blue-950/50 px-4 py-2 rounded-lg border border-blue-400/30">
+            <span id="connectionDot" class="inline-flex h-3 w-3 bg-red-500 rounded-full"></span>
+            <span id="statusText" class="text-sm font-mono text-red-200">Desconectado</span>
+        </div>
+    </div>
+</header>
+
+<main class="flex-grow container mx-auto px-4 py-8">
+
+    <h2 class="text-center text-3xl font-bold text-slate-800 mb-8">Monitoreo Térmico Multipunto</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Sensores -->
+        <div class="sensor-card bg-white rounded-xl p-4 shadow">
+            <h3 class="font-bold text-blue-700">Dormitorio</h3>
+            <div id="v1" class="text-4xl font-bold text-slate-800">--</div>
+            <div class="thermo-bar mt-2"><div id="t1" class="thermo-fill"></div></div>
+        </div>
+        <div class="sensor-card bg-white rounded-xl p-4 shadow">
+            <h3 class="font-bold text-blue-700">Sala</h3>
+            <div id="v2" class="text-4xl font-bold text-slate-800">--</div>
+            <div class="thermo-bar mt-2"><div id="t2" class="thermo-fill"></div></div>
+        </div>
+        <div class="sensor-card bg-white rounded-xl p-4 shadow">
+            <h3 class="font-bold text-blue-700">Cocina</h3>
+            <div id="v3" class="text-4xl font-bold text-slate-800">--</div>
+            <div class="thermo-bar mt-2"><div id="t3" class="thermo-fill"></div></div>
+        </div>
+        <div class="sensor-card bg-white rounded-xl p-4 shadow">
+            <h3 class="font-bold text-blue-700">Garaje</h3>
+            <div id="v4" class="text-4xl font-bold text-slate-800">--</div>
+            <div class="thermo-bar mt-2"><div id="t4" class="thermo-fill"></div></div>
+        </div>
+    </div>
+
+    <!-- Promedio General -->
+    <div class="bg-white p-6 rounded-xl shadow mt-8">
+        <h3 class="text-xl font-bold text-slate-800">Promedio General</h3>
+        <div id="prom" class="text-5xl font-bold mt-2">--</div>
+        <div class="thermo-bar mt-2"><div id="tg" class="thermo-fill"></div></div>
+    </div>
+
+    <!-- Control Manual / Automático -->
+    <div class="mt-10 flex gap-4 justify-center">
+        <button id="autoBtn" class="bg-blue-700 text-white px-6 py-3 rounded-lg shadow">Automático</button>
+        <button id="manBtn" class="bg-slate-500 text-white px-6 py-3 rounded-lg shadow">Manual</button>
+    </div>
+
+    <!-- Ventilador / Calefactor -->
+    <div class="mt-6 flex gap-6 justify-center">
+        <button id="fanBtn" class="px-6 py-3 rounded-lg shadow bg-slate-400 text-white">Ventilador</button>
+        <button id="heatBtn" class="px-6 py-3 rounded-lg shadow bg-slate-400 text-white">Calefactor</button>
+    </div>
+
+    <!-- Botón de conexión Bluetooth -->
+    <div class="mt-10 flex justify-center">
+        <button id="connectBtn" class="bg-indigo-700 hover:bg-indigo-600 text-white px-8 py-4 rounded-full shadow text-lg flex items-center gap-3">
+            <i data-lucide="bluetooth" class="w-6 h-6"></i>
+            Conectar Bluetooth
+        </button>
+    </div>
+
+</main>
+
+<script>
+    lucide.createIcons();
+
+    let modo = "auto";
+    let temps = [0, 0, 0, 0];
+
+    function actualizarUI() {
+        for (let i = 0; i < 4; i++) {
+            document.getElementById("v"+(i+1)).innerText = temps[i].toFixed(1);
+            document.getElementById("t"+(i+1)).style.width = (temps[i] * 2) + "%";
+        }
+
+        let p = (temps[0]+temps[1]+temps[2]+temps[3]) / 4;
+        document.getElementById("prom").innerText = p.toFixed(1);
+        document.getElementById("tg").style.width = (p * 2) + "%";
+
+        if (modo === "auto") autoControl(p);
+    }
+
+    function autoControl(p) {
+        if (p < 20) {
+            fanBtn.className = "px-6 py-3 rounded-lg shadow bg-slate-400 text-white";
+            heatBtn.className = "px-6 py-3 rounded-lg shadow bg-red-600 text-white";
+        } else {
+            fanBtn.className = "px-6 py-3 rounded-lg shadow bg-blue-600 text-white";
+            heatBtn.className = "px-6 py-3 rounded-lg shadow bg-slate-400 text-white";
+        }
+    }
+
+    autoBtn.onclick = () => {
+        modo = "auto";
+        autoBtn.className = "bg-blue-700 text-white px-6 py-3 rounded-lg shadow";
+        manBtn.className = "bg-slate-500 text-white px-6 py-3 rounded-lg shadow";
+        actualizarUI();
+    };
+
+    manBtn.onclick = () => {
+        modo = "man";
+        autoBtn.className = "bg-slate-500 text-white px-6 py-3 rounded-lg shadow";
+        manBtn.className = "bg-blue-700 text-white px-6 py-3 rounded-lg shadow";
+    };
+
+    fanBtn.onclick = () => {
+        if (modo === "man") fanBtn.classList.toggle("bg-blue-600");
+    };
+
+    heatBtn.onclick = () => {
+        if (modo === "man") heatBtn.classList.toggle("bg-red-600");
+    };
+
+</script>
+
+</body>
+</html>
